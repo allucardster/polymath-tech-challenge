@@ -1,3 +1,5 @@
-*.html
-*.db
+/*.html
+/*.db
 src/__pycache__
+env-polymath-tech-challenge/
+.vscode/
