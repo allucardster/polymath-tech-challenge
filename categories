@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import argparse
+from src.managers import *
+from src.api import *
+from jinja2 import Environment, PackageLoader, select_autoescape
+
+jinja2Env = Environment(loader=PackageLoader('src', 'templates'), autoescape=select_autoescape(['html']))
+ebayClient = EbayClient()
+dbManager = DatabaseManager()
+catManager = CategoryManager()
+
+def rebuild():
+    """
+    Rebuild the SQLite database and loads eBay categories.
+    """
+    print("Cleanup SQLite database.")
+    dbManager.cleanUp()
+    print("Done!")
+    print("Fetching categories from eBay...")
+    categories = ebayClient.getAllCategories()
+    print("Done!")
+    print("Loading eBay categories in SQLite database...")
+    catManager.loadCategories(categories)
+    print("Done!")
+
+def render(categoryId):
+    """
+    Renders category tree into HTML file
+
+    :param categoryId: Identifier for "root" category
+    """
+    try:
+        category = catManager.getById(categoryId)
+        fileName = f'{category.id}.html'
+        print(f'Rendering "{fileName}"')
+        template = jinja2Env.get_template('category.html')
+        file = open(fileName, 'w')
+        file.write(template.render(category=category, categories=catManager.getByParentId(category.id)))
+        print("Done!")
+    except DoesNotExist:
+        print(f'No category with ID: {categoryId}')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Allows download the entire eBay category tree, store it in a SQLite database and render them in HTML format')
+    parser.add_argument('--rebuild', action='store_true', help='Clears SQLite database before download the entire eBay category tree and store it.')
+    parser.add_argument('--render', type=int, metavar='category_id', help='Uses SQLite database to render category trees in HTML by given "category_id".')
+
+    args = parser.parse_args()
+
+    if args.rebuild:
+        rebuild()
+
+    if args.render:
+        render(args.render)
