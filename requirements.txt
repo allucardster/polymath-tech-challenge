@@ -5,6 +5,6 @@ Jinja2==2.10
 MarkupSafe==1.0
 peewee==3.6.4
 requests==2.19.1
-urllib3==1.23
+urllib3==1.24.2
 xmler==0.2.0
 xmltodict==0.11.0
